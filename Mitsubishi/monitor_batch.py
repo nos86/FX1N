@@ -45,18 +45,15 @@ class MonitorBatch:
     def stopMonitor(self):
         self.monitor_started = False
 
-    def getValueFromMonitor(self, convertNumber=True):
+    def getValueFromMonitor(self):
         data_len = len(self.data_monitor)
         byte_len = int(math.ceil(len(self.bit_monitor)/8.0))
-        response = self.serial.readFromAddress(self.read_address, data_len * 2 + byte_len)
+        response = self.serial.readFromAddress(self.read_address, data_len * 2 + byte_len, returnRaw=True)
         data = {}
         for idx, param in enumerate(self.data_monitor):
             offset = 4 * idx
             code = response[offset:offset+4]
-            if convertNumber:
-                data[param] = int(code[2:4] + code[0:2],16)
-            else:
-                data[param] = code[2:4] + code[0:2]
+            data[param] = utils.hexStringToInt(code)
         for idx, param in enumerate(self.bit_monitor):
             offset = 4 * data_len + 2 * ( idx / 8 ) #Search for right byte
             code = int(response[offset:offset+2])

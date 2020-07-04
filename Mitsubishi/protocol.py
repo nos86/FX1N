@@ -3,6 +3,7 @@ import logging
 import re
 
 from . import exceptions
+from . import utils
 from .monitor_batch import MonitorBatch
 
 class Protocol(serial.Serial):
@@ -20,8 +21,7 @@ class Protocol(serial.Serial):
     register_offset = {} #To be inplemented in child classes
 
     monitor_batch_config = [
-       {'write_address': 0x1400, 'read_address': 0x1790},
-       {'write_address': 0x1440, 'read_address': 0x17D0} 
+       {'write_address': 0x1400, 'read_address': 0x1790}
     ]
 
     def __init__(self, 
@@ -108,10 +108,11 @@ class Protocol(serial.Serial):
         else:
             raise exceptions.NotSupportedRegister(register)
 
-    def readFromAddress(self, address, size):
+    def readFromAddress(self, address, size, returnRaw=False):
         #<stx> E00 YYYY NN <etx> CC   ==> YYYY = Address (4bytes) NN = number of bytes (2bytes) CC = sum
         request = f'E00{address:04X}{size:02X}'
-        return self.write(payload = request)
+        response = self.write(payload = request)
+        return response if returnRaw else utils.hexStringToInt(response) 
 
     def writeToAddress(self, address: int, value: list ):
         #<stx> E10 YYYY NN XXXXXXX<etx> CC   ==> YYYY = Address (4bytes) NN = number of bytes (2bytes) X = data to write CC = sum
