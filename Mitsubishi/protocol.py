@@ -122,8 +122,7 @@ class Protocol(serial.Serial):
             raise ValueError("Only integer or list of integer are allowed")
         size = len(value) * 2
         if not isinstance(value, str):
-            value = b''.join([int.to_bytes(val, length=2, byteorder='little') for val in value])
-            value = binascii.hexlify(value).decode()
+            value = ''.join([utils.intToHexString(val) for val in value])
         request = f'E10{address:04X}{size:02X}{value}'
         return self.write(payload = request)
 
@@ -143,4 +142,4 @@ class Protocol(serial.Serial):
         return self.readFromAddress(*self.getRegisterAddress(register, returnSize=True))
 
     def writeToRegister(self, register, value):
-        return self.writeToAddress(*self.getRegisterAddress(register, False), value)
+        return self.writeToAddress(self.getRegisterAddress(register), value)
